@@ -22,7 +22,7 @@ export function VisualizerLayout({
 }: Props) {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="surface-floor sticky top-0 z-20 shrink-0 border-b border-dsa-border">
+      <header className="surface-floor z-20 shrink-0 border-b border-dsa-border lg:sticky lg:top-0">
         <div className="px-5 pb-5 pt-6 md:px-8 md:pb-6 md:pt-7">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 max-w-3xl">

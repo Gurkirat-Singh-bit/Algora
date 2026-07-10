@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
 
-## Getting Started
+<img src="./public/logo.svg" width="88" height="88" alt="Algora logo" />
 
-First, run the development server:
+# Algora
+
+**A step-through visualizer for data structures and algorithms.**
+
+Pick a topic, run an operation, and scrub the trace. Every step highlights the
+active indices, moves the pseudocode pointer, and logs exactly what changed.
+
+[Live demo](https://rkirat-singh.workers.dev) · [Report a bug](https://github.com/Gurkirat-Singh-bit/Algora/issues) · [Contribute](./CONTRIBUTING.md)
+
+</div>
+
+---
+
+## What it does
+
+Algora turns a standard DSA syllabus into 13 interactive visualizers. Each one
+runs entirely in the browser: no backend, no account, nothing sent anywhere.
+
+- **Step engine** — play, pause, step forward/back, scrub, and set speed (1–5).
+- **Synced views** — the canvas, the pseudocode pointer, and the step log all
+  track the current step. Click any log line to jump there.
+- **Complexity at a glance** — time and space Big-O for every operation.
+- **Draggable graphs** — build your own graph, toggle directed/weighted, and
+  watch BFS/DFS traverse it. Import, export, and share via URL.
+- **Light and dark** themes, keyboard shortcuts, and PNG export of any frame.
+
+## Topics
+
+| Group | Topics |
+|-------|--------|
+| Linear | Arrays · Singly / Doubly / Circular Linked Lists · Stack · Queue |
+| Algorithms | Recursion · Searching · Sorting |
+| Trees & Graphs | Binary Tree · BST · Heap · Graphs |
+
+## Keyboard shortcuts
+
+| Key | Action |
+|-----|--------|
+| `Space` | Play / pause (or reset when complete) |
+| `←` / `→` | Step backward / forward |
+| `R` | Reset to the first step |
+| `1`–`5` | Set playback speed (slow → fast) |
+
+## Tech stack
+
+- [Next.js 16](https://nextjs.org) (App Router, Turbopack) + React 19
+- [Bun](https://bun.sh) for install and scripts
+- [Tailwind CSS v4](https://tailwindcss.com)
+- [React Flow](https://reactflow.dev) + [dagre](https://github.com/dagrejs/dagre) for node/graph layouts
+- [Framer Motion](https://www.framer.com/motion/) for cell transitions
+- [Zustand](https://github.com/pmndrs/zustand) for graph state
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# install dependencies
+bun install
+
+# start the dev server (http://localhost:3000)
+bun run dev
+
+# production build
+bun run build && bun run start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project layout
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+src/app/            route per topic + root layout
+src/components/     visualizers, shared UI, primitives
+src/hooks/          animation engine, step runner, keyboard controls
+lib/algorithms/     pure step-generating functions (return Step[])
+lib/types.ts        shared Step / NodeData / Complexity contracts
+constants/          navigation + repo config
+Docs/               design system + architecture notes
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+See [Docs/DESIGN.md](./Docs/DESIGN.md) for the design system and
+[Docs/ARCHITECTURE.md](./Docs/ARCHITECTURE.md) for the build plan.
 
-## Learn More
+## Contributing
 
-To learn more about Next.js, take a look at the following resources:
+Contributions are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup,
+conventions, and how to add a new visualizer.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[MIT](./LICENSE) © 2026 Gurkirat Singh

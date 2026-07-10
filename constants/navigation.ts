@@ -49,7 +49,7 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   {
     label: 'Learning Path',
-    href: '/',
+    href: '/learn',
     icon: 'Compass',
     category: 'Curriculum',
     summary: 'Structured learning order aligned to a common DSA course sequence.',

@@ -9,8 +9,16 @@ import { categories, iconMap, navItems, REPO_URL } from '@/constants/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { GithubIcon } from '@/components/shared/GithubIcon'
 import { Logo } from '@/components/shared/Logo'
+import { ShortcutsHelp } from '@/components/shared/ShortcutsHelp'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useUIStore } from '@/store/useUIStore'
 import {
   Sheet,
@@ -216,30 +224,40 @@ export function Sidebar() {
 
         {sidebarCollapsed ? (
           <>
-            <nav className="flex-1 overflow-y-auto py-3">
-              <ul className="space-y-1 px-2">
-                {navItems.slice(1).map(item => {
-                  const Icon = iconMap[item.icon]
-                  const active = pathname === item.href
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        title={item.label}
-                        className={cn(
-                          'flex h-9 items-center justify-center rounded-md transition-colors',
-                          active
-                            ? 'bg-dsa-card text-dsa-primary-container'
-                            : 'text-dsa-muted-soft hover:bg-dsa-card hover:text-dsa-text'
-                        )}
-                      >
-                        <Icon className="h-4 w-4" strokeWidth={1.7} />
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            </nav>
+            <TooltipProvider delayDuration={0}>
+              <nav className="flex-1 overflow-y-auto py-3">
+                <ul className="space-y-1 px-2">
+                  {navItems.slice(1).map(item => {
+                    const Icon = iconMap[item.icon]
+                    const active = pathname === item.href
+                    return (
+                      <li key={item.href}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Link
+                              href={item.href}
+                              aria-label={item.label}
+                              className={cn(
+                                'flex h-9 items-center justify-center rounded-md transition-colors',
+                                active
+                                  ? 'bg-dsa-card text-dsa-primary-container'
+                                  : 'text-dsa-muted-soft hover:bg-dsa-card hover:text-dsa-text'
+                              )}
+                            >
+                              <Icon className="h-4 w-4" strokeWidth={1.7} />
+                            </Link>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="flex flex-col gap-0.5">
+                            <span className="font-medium text-dsa-text-strong">{item.label}</span>
+                            <span className="max-w-[13rem] text-[11px] leading-4 text-dsa-muted">{item.summary}</span>
+                          </TooltipContent>
+                        </Tooltip>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </nav>
+            </TooltipProvider>
             <div className="flex flex-col items-center gap-1 border-t border-dsa-border py-2">
               <ThemeToggle compact />
               <Button
@@ -267,15 +285,11 @@ export function Sidebar() {
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 text-[11px] text-dsa-muted transition-colors hover:text-dsa-text"
                 >
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
-                    <path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.2-3.1-.12-.3-.52-1.47.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.5 3.17-1.18 3.17-1.18.63 1.58.23 2.75.11 3.04.75.82 1.2 1.85 1.2 3.11 0 4.43-2.7 5.41-5.26 5.7.41.36.78 1.06.78 2.14v3.17c0 .31.2.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/>
-                  </svg>
+                  <GithubIcon className="h-3.5 w-3.5" />
                   Source on GitHub
                 </a>
               )}
-              <div className="text-[10px] font-mono uppercase tracking-category text-dsa-muted-soft">
-                Shortcut · <span className="text-dsa-muted">Space ←→ R 1-5</span>
-              </div>
+              <ShortcutsHelp />
             </div>
           </>
         )}

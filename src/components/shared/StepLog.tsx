@@ -13,7 +13,17 @@ interface Props {
 export function StepLog({ steps, currentStep, onJump }: Props) {
   const activeRef = useRef<HTMLButtonElement>(null)
   useEffect(() => {
-    activeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    const el = activeRef.current
+    if (!el) return
+    // Scroll ONLY the log's own viewport, never the window. scrollIntoView walks
+    // every scrollable ancestor (incl. the page), which on mobile yanks the whole
+    // view down to the log on each step. Nudge the local viewport instead.
+    const viewport = el.closest('[data-radix-scroll-area-viewport]') as HTMLElement | null
+    if (!viewport) return
+    const e = el.getBoundingClientRect()
+    const v = viewport.getBoundingClientRect()
+    if (e.top < v.top) viewport.scrollBy({ top: e.top - v.top - 8, behavior: 'smooth' })
+    else if (e.bottom > v.bottom) viewport.scrollBy({ top: e.bottom - v.bottom + 8, behavior: 'smooth' })
   }, [currentStep])
 
   if (steps.length === 0) {
