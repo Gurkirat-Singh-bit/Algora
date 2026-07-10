@@ -1,0 +1,12 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Algora">
+  <defs>
+    <linearGradient id="algora-mark" x1="0.2" y1="0.05" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#AEE372"/>
+      <stop offset="0.5" stop-color="#8FD357"/>
+      <stop offset="1" stop-color="#67B238"/>
+    </linearGradient>
+  </defs>
+  <path d="M168 356 Q 232 244 256 170 Q 280 244 344 356" fill="none"
+        stroke="url(#algora-mark)" stroke-width="84"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

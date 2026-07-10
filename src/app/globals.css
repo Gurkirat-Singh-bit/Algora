@@ -1,0 +1,248 @@
+@import "tailwindcss";
+
+:root {
+  --sidebar-width: 17rem;
+  --ui-font-scale: 100%;
+  --font-sans-stack: var(--font-geist-sans), 'Geist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono-stack: var(--font-geist-mono), 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Dark — OKLCH neutrals tinted toward green. No pure #000. */
+  --color-base-00: oklch(0.10 0.005 150);
+  --color-base-05: oklch(0.13 0.005 150);
+  --color-base-08: oklch(0.155 0.006 150);
+  --color-base-10: oklch(0.18 0.006 150);
+  --color-base-15: oklch(0.21 0.006 150);
+  --color-base-20: oklch(0.245 0.007 150);
+  --color-base-25: oklch(0.285 0.007 150);
+  --color-base-30: oklch(0.34 0.008 150);
+  --color-base-40: oklch(0.42 0.009 150);
+  --color-base-50: oklch(0.55 0.009 150);
+  --color-base-60: oklch(0.66 0.009 150);
+  --color-base-70: oklch(0.78 0.008 150);
+  --color-base-90: oklch(0.92 0.006 150);
+  --color-base-100: oklch(0.97 0.005 150);
+
+  --dsa-bg: var(--color-base-00);
+  --dsa-surface: var(--color-base-05);
+  --dsa-card: var(--color-base-10);
+  --dsa-panel: var(--color-base-15);
+  --dsa-elevated: var(--color-base-20);
+  --dsa-border: var(--color-base-20);
+  --dsa-border-strong: var(--color-base-30);
+
+  --dsa-primary: oklch(0.92 0.06 135);
+  --dsa-primary-container: oklch(0.78 0.16 135);
+  --dsa-primary-dim: oklch(0.66 0.14 135);
+  --dsa-active: oklch(0.82 0.14 135);
+  --dsa-compare: oklch(0.66 0.05 230);
+  --dsa-found: oklch(0.78 0.13 138);
+  --dsa-delete: oklch(0.68 0.10 25);
+  --dsa-insert: oklch(0.68 0.09 290);
+
+  --dsa-text: var(--color-base-100);
+  --dsa-text-strong: oklch(0.985 0.004 150);
+  --dsa-muted: var(--color-base-60);
+  --dsa-muted-soft: var(--color-base-50);
+  --dsa-outline: var(--color-base-30);
+
+  --on-accent: oklch(0.16 0.020 150);
+  --ghost-border: oklch(0.34 0.008 150 / 0.55);
+  --ghost-border-strong: oklch(0.42 0.009 150 / 0.85);
+
+  /* Aliases used by graph editor / step components */
+  --primary: var(--dsa-primary);
+  --primary-fixed: var(--dsa-active);
+  --primary-fixed-dim: var(--dsa-primary-dim);
+  --primary-container: var(--dsa-primary-container);
+  --on-primary-fixed: var(--on-accent);
+  --on-surface: var(--dsa-text);
+  --on-surface-variant: var(--dsa-muted);
+  --outline: var(--dsa-outline);
+  --outline-variant: var(--dsa-border);
+  --surface: var(--dsa-bg);
+  --surface-bright: var(--dsa-elevated);
+  --surface-container: var(--dsa-panel);
+  --surface-container-low: var(--dsa-card);
+  --surface-container-lowest: var(--dsa-surface);
+  --surface-container-high: var(--dsa-panel);
+  --surface-container-highest: var(--dsa-elevated);
+}
+
+html[data-color-scheme='dark'] { color-scheme: dark; }
+
+html[data-color-scheme='light'] {
+  color-scheme: light;
+
+  --color-base-00: oklch(0.99 0.003 150);
+  --color-base-05: oklch(0.97 0.005 150);
+  --color-base-08: oklch(0.955 0.006 150);
+  --color-base-10: oklch(0.94 0.007 150);
+  --color-base-15: oklch(0.915 0.008 150);
+  --color-base-20: oklch(0.885 0.009 150);
+  --color-base-25: oklch(0.84 0.010 150);
+  --color-base-30: oklch(0.78 0.011 150);
+  --color-base-40: oklch(0.65 0.013 150);
+  --color-base-50: oklch(0.50 0.014 150);
+  --color-base-60: oklch(0.40 0.013 150);
+  --color-base-70: oklch(0.28 0.011 150);
+  --color-base-90: oklch(0.20 0.013 150);
+  --color-base-100: oklch(0.16 0.014 150);
+
+  --dsa-bg: var(--color-base-00);
+  --dsa-surface: var(--color-base-05);
+  --dsa-card: var(--color-base-10);
+  --dsa-panel: var(--color-base-15);
+  --dsa-elevated: var(--color-base-15);
+  --dsa-border: var(--color-base-25);
+  --dsa-border-strong: var(--color-base-40);
+
+  --dsa-primary: oklch(0.32 0.10 135);
+  --dsa-primary-container: oklch(0.55 0.16 135);
+  --dsa-primary-dim: oklch(0.46 0.15 135);
+  --dsa-active: oklch(0.62 0.16 135);
+  --dsa-found: oklch(0.55 0.16 138);
+  --dsa-compare: oklch(0.50 0.09 230);
+  --dsa-insert: oklch(0.50 0.13 290);
+  --dsa-delete: oklch(0.55 0.16 25);
+
+  --dsa-text: var(--color-base-100);
+  --dsa-text-strong: oklch(0.10 0.014 150);
+  --dsa-muted: var(--color-base-60);
+  --dsa-muted-soft: var(--color-base-50);
+  --dsa-outline: var(--color-base-30);
+
+  --on-accent: oklch(0.99 0.005 150);
+  --ghost-border: oklch(0.78 0.011 150 / 0.85);
+  --ghost-border-strong: oklch(0.65 0.013 150 / 0.9);
+}
+
+@theme inline {
+  --color-background: var(--dsa-bg);
+  --color-foreground: var(--dsa-text);
+  --color-dsa-bg: var(--dsa-bg);
+  --color-dsa-surface: var(--dsa-surface);
+  --color-dsa-card: var(--dsa-card);
+  --color-dsa-panel: var(--dsa-panel);
+  --color-dsa-elevated: var(--dsa-elevated);
+  --color-dsa-border: var(--dsa-border);
+  --color-dsa-border-strong: var(--dsa-border-strong);
+  --color-dsa-primary: var(--dsa-primary);
+  --color-dsa-primary-container: var(--dsa-primary-container);
+  --color-dsa-primary-dim: var(--dsa-primary-dim);
+  --color-dsa-active: var(--dsa-active);
+  --color-dsa-compare: var(--dsa-compare);
+  --color-dsa-found: var(--dsa-found);
+  --color-dsa-delete: var(--dsa-delete);
+  --color-dsa-insert: var(--dsa-insert);
+  --color-dsa-text: var(--dsa-text);
+  --color-dsa-text-strong: var(--dsa-text-strong);
+  --color-dsa-muted: var(--dsa-muted);
+  --color-dsa-muted-soft: var(--dsa-muted-soft);
+  --color-dsa-outline: var(--dsa-outline);
+  --color-on-accent: var(--on-accent);
+  --font-sans: var(--font-sans-stack);
+  --font-mono: var(--font-mono-stack);
+}
+
+* { border-color: var(--dsa-border); }
+
+html, body { min-height: 100%; }
+
+html {
+  font-size: var(--ui-font-scale);
+  font-family: var(--font-sans-stack);
+}
+
+body {
+  background: var(--dsa-bg);
+  color: var(--dsa-text);
+  font-family: var(--font-sans-stack);
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.005em;
+}
+
+code, kbd, pre, samp, .font-mono {
+  font-family: var(--font-mono-stack);
+}
+
+.surface-bg     { background: var(--dsa-bg); }
+.surface-floor  { background: var(--dsa-surface); }
+.surface-low    { background: var(--dsa-card); }
+.surface-mid    { background: var(--dsa-panel); }
+.surface-high   { background: var(--dsa-elevated); }
+.surface-float  { background: var(--dsa-surface); }
+
+.hairline        { border-color: var(--dsa-border); }
+.hairline-strong { border-color: var(--dsa-border-strong); }
+
+.text-display       { letter-spacing: -0.025em; }
+.tracking-display   { letter-spacing: -0.025em; }
+.tracking-data      { letter-spacing: 0.04em; }
+.tracking-category  { letter-spacing: 0.16em; }
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-rise { animation: rise-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+::-webkit-scrollbar       { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--dsa-border-strong);
+  border-radius: 6px;
+  border: 2px solid var(--dsa-bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--dsa-outline); }
+
+/* ReactFlow */
+.react-flow__background { background: transparent; }
+.react-flow__node { cursor: pointer; }
+
+/* Hide the default connection-handle dots so nodes read as data cells,
+   not graph ports. Edges still anchor to the handle positions. */
+.react-flow__handle {
+  opacity: 0;
+  min-width: 0;
+  min-height: 0;
+  width: 1px;
+  height: 1px;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Controls: rounded, hairline-bordered pill that matches the panel theme. */
+.react-flow__controls {
+  border: 1px solid var(--dsa-border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: none !important;
+  background: var(--dsa-card) !important;
+}
+.react-flow__controls-button {
+  background: var(--dsa-card) !important;
+  color: var(--dsa-text) !important;
+  border: 0;
+  border-bottom: 1px solid var(--dsa-border) !important;
+  width: 30px;
+  height: 30px;
+}
+.react-flow__controls-button:last-child { border-bottom: 0 !important; }
+/* ReactFlow ships glyphs with a hardcoded dark fill; force them to follow
+   the button's text color so they are visible in dark mode. */
+.react-flow__controls-button svg,
+.react-flow__controls-button svg path {
+  fill: currentColor !important;
+}
+.react-flow__controls-button:hover {
+  background: var(--dsa-panel) !important;
+  color: var(--dsa-primary-container) !important;
+}
+.react-flow__controls-button:disabled {
+  color: var(--dsa-muted-soft) !important;
+  opacity: 0.5;
+}
+.react-flow__attribution { display: none !important; }
