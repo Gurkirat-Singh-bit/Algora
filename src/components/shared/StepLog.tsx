@@ -22,8 +22,9 @@ export function StepLog({ steps, currentStep, onJump }: Props) {
     if (!viewport) return
     const e = el.getBoundingClientRect()
     const v = viewport.getBoundingClientRect()
-    if (e.top < v.top) viewport.scrollBy({ top: e.top - v.top - 8, behavior: 'smooth' })
-    else if (e.bottom > v.bottom) viewport.scrollBy({ top: e.bottom - v.bottom + 8, behavior: 'smooth' })
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+    if (e.top < v.top) viewport.scrollBy({ top: e.top - v.top - 8, behavior })
+    else if (e.bottom > v.bottom) viewport.scrollBy({ top: e.bottom - v.bottom + 8, behavior })
   }, [currentStep])
 
   if (steps.length === 0) {

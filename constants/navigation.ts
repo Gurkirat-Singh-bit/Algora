@@ -3,6 +3,7 @@ import {
   Binary,
   Compass,
   GitBranch,
+  Hash,
   Layers,
   Link as LinkIcon,
   Link2,
@@ -12,7 +13,9 @@ import {
   Rows3,
   Search,
   SquareStack,
+  SpellCheck2,
   TreePine,
+  Workflow,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -31,6 +34,9 @@ export const iconMap = {
   Binary,
   TreePine,
   Network,
+  Hash,
+  SpellCheck2,
+  Workflow,
 } satisfies Record<string, LucideIcon>
 
 export type NavIcon = keyof typeof iconMap
@@ -145,6 +151,33 @@ export const navItems: NavItem[] = [
     category: 'Trees and Graphs',
     summary: 'BFS and DFS traversal states over interactive node-edge canvases.',
   },
+  {
+    label: 'Hash Table',
+    href: '/hash-table',
+    icon: 'Hash',
+    category: 'Advanced Structures',
+    summary: 'Modulo hashing, collision chains, lookup, and deletion.',
+  },
+  {
+    label: 'Trie',
+    href: '/trie',
+    icon: 'SpellCheck2',
+    category: 'Advanced Structures',
+    summary: 'Prefix sharing, terminal markers, word lookup, and pruning.',
+  },
+  {
+    label: 'Disjoint Set',
+    href: '/union-find',
+    icon: 'Workflow',
+    category: 'Advanced Structures',
+    summary: 'Union by rank, representative lookup, and path compression.',
+  },
 ]
 
-export const categories = ['Curriculum', 'Linear Data Structures', 'Algorithms', 'Trees and Graphs']
+export const categories = [
+  'Curriculum',
+  'Linear Data Structures',
+  'Algorithms',
+  'Trees and Graphs',
+  'Advanced Structures',
+]

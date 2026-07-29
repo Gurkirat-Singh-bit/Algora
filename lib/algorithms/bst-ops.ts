@@ -242,12 +242,34 @@ export function insertIntoValues(values: number[], value: number): number[] {
 }
 
 export function removeFromValues(values: number[], value: number): number[] {
-  const index = values.indexOf(value)
-  if (index < 0) {
-    return values
+  const deleteNode = (node: BstNode | null, target: number): BstNode | null => {
+    if (!node) return null
+    if (target < node.value) {
+      node.left = deleteNode(node.left, target)
+      return node
+    }
+    if (target > node.value) {
+      node.right = deleteNode(node.right, target)
+      return node
+    }
+    if (!node.left) return node.right
+    if (!node.right) return node.left
+
+    let successor = node.right
+    while (successor.left) successor = successor.left
+    node.value = successor.value
+    node.right = deleteNode(node.right, successor.value)
+    return node
   }
 
-  const next = [...values]
-  next.splice(index, 1)
-  return next
+  const root = deleteNode(buildBstFromValues(values), value)
+  const preorder: number[] = []
+  const visit = (node: BstNode | null): void => {
+    if (!node) return
+    preorder.push(node.value)
+    visit(node.left)
+    visit(node.right)
+  }
+  visit(root)
+  return preorder
 }

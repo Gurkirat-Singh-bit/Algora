@@ -13,27 +13,44 @@ import ReactFlow, {
   type EdgeChange,
   type Node,
   type NodeChange,
+  type NodeTypes,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
-import { Check, Link2, Network, Pencil, Play, Plus, RefreshCcw, Trash2, Upload, Download, MousePointer2 } from 'lucide-react'
+import dagre from '@dagrejs/dagre'
+import {
+  Check,
+  Download,
+  Focus,
+  Link2,
+  MousePointer2,
+  Network,
+  Pencil,
+  Play,
+  Plus,
+  RefreshCcw,
+  Route,
+  Trash2,
+  Upload,
+} from 'lucide-react'
 
 import { AdjacencyDisplay } from '@/components/graphs/AdjacencyDisplay'
+import { GraphNode, type GraphNodeData } from '@/components/graphs/GraphNode'
 import { Button } from '@/components/ui/button'
 import { CodeHighlight } from '@/components/shared/CodeHighlight'
 import { ControlPanel } from '@/components/shared/ControlPanel'
 import { StepController } from '@/components/shared/StepController'
 import { StepLog } from '@/components/shared/StepLog'
 import { VisualizerLayout } from '@/components/shared/VisualizerLayout'
-import {
-  DEFAULT_FIT_OPTIONS,
-  DEFAULT_PRO_OPTIONS,
-  STABLE_EDGE_TYPES,
-  STABLE_NODE_TYPES,
-} from '@/components/shared/reactflowConfig'
+import { DEFAULT_FIT_OPTIONS, DEFAULT_PRO_OPTIONS, STABLE_EDGE_TYPES } from '@/components/shared/reactflowConfig'
 import { useStepRunner } from '@/hooks/useStepRunner'
 import { useKeyboardControls } from '@/hooks/useKeyboardControls'
-import { useGraphStore, type GraphSnapshot } from '@/store/useGraphStore'
+import { useGraphStore } from '@/store/useGraphStore'
 import { buildShareUrl, readShareFromHash } from '@/lib/share'
+import {
+  MAX_GRAPH_NODES,
+  parseGraphSnapshot,
+  type GraphSnapshot,
+} from '@/lib/graph'
 import {
   bfsSteps,
   buildAdjacencyFromSnapshot,
@@ -77,24 +94,14 @@ const modeMeta: Record<
   },
 }
 
+const GRAPH_NODE_TYPES = { graphNode: GraphNode } satisfies NodeTypes
+
 function nodeStateFromStep(nodeId: number, step: Step | null): NodeData['state'] {
   if (!step || !step.indices.includes(nodeId)) return 'default'
   if (step.action === 'traverse') return 'found'
   if (step.action === 'compare') return 'comparing'
   if (step.action === 'insert') return 'inserting'
   return 'active'
-}
-
-function stateColor(state: NodeData['state']): string {
-  if (state === 'active') return 'var(--dsa-active)'
-  if (state === 'found') return 'var(--dsa-found)'
-  if (state === 'comparing') return 'var(--dsa-compare)'
-  if (state === 'inserting') return 'var(--dsa-insert)'
-  return 'var(--dsa-elevated)'
-}
-
-function stateText(state: NodeData['state']): string {
-  return state === 'default' ? 'var(--dsa-text-strong)' : 'var(--on-accent)'
 }
 
 function GraphCanvas({ mode }: Props) {
@@ -121,15 +128,32 @@ function GraphCanvas({ mode }: Props) {
   const [editMode, setEditMode] = useState(false)
   const [status, setStatus] = useState('Run traversal or switch to Edit mode to build a custom graph.')
   const [linkCopied, setLinkCopied] = useState(false)
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
-  const { screenToFlowPosition } = useReactFlow()
+  const { fitView, screenToFlowPosition } = useReactFlow()
 
   useEffect(() => {
-    const shared = readShareFromHash<GraphSnapshot>('g')
-    if (shared && Array.isArray(shared.nodes) && Array.isArray(shared.edges)) {
-      load(shared)
+    const shared = readShareFromHash<unknown>('g')
+    if (!shared) return
+    try {
+      const snapshot = parseGraphSnapshot(shared)
+      load(snapshot)
+      requestAnimationFrame(() => {
+        setStatus(`Loaded shared graph with ${snapshot.nodes.length} nodes.`)
+      })
+    } catch (error) {
+      requestAnimationFrame(() => {
+        setStatus(`Shared graph was ignored: ${(error as Error).message}`)
+      })
     }
   }, [load])
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      void fitView({ ...DEFAULT_FIT_OPTIONS, duration: 250 })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [fitView, storeNodes.length])
 
   const meta = modeMeta[mode]
 
@@ -164,45 +188,31 @@ function GraphCanvas({ mode }: Props) {
 
   const activeEdgeKey = useMemo(() => {
     const step = runner.currentStepData
-    if (!step || step.action !== 'compare' || step.indices.length < 2) return null
-    const [a, b] = step.indices
+    if (!step?.edge || step.action !== 'compare') return null
+    const [a, b] = step.edge
     return directed ? `${a}->${b}` : a < b ? `${a}-${b}` : `${b}-${a}`
   }, [runner.currentStepData, directed])
 
-  const flowNodes: Node[] = useMemo(() => {
+  const flowNodes: Array<Node<GraphNodeData>> = useMemo(() => {
     return storeNodes.map(n => {
       const state = nodeStateFromStep(n.id, runner.currentStepData)
       const visited = visitedSet.has(n.id)
       const isSelected = selectedNodeId === n.id
       return {
         id: String(n.id),
+        type: 'graphNode',
         position: { x: n.x, y: n.y },
-        data: { label: `${n.id}` },
+        data: {
+          label: n.label ?? String(n.id),
+          state,
+          visited,
+          selected: isSelected,
+          editMode,
+        },
         draggable: true,
         connectable: editMode,
         selectable: true,
-        style: {
-          width: 56,
-          height: 56,
-          borderRadius: 999,
-          border: isSelected
-            ? '2px solid var(--dsa-primary-container)'
-            : visited
-              ? '2px solid var(--dsa-primary-container)'
-              : state === 'default'
-                ? '1px solid var(--dsa-border-strong)'
-                : '1px solid transparent',
-          background: stateColor(state),
-          color: stateText(state),
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: 'var(--font-mono-stack)',
-          fontWeight: 600,
-          fontSize: 15,
-          letterSpacing: '0.04em',
-          transition: 'background 200ms ease, color 200ms ease, border-color 200ms ease',
-        },
+        ariaLabel: `Graph node ${n.label ?? n.id}${visited ? ', visited' : ''}`,
       }
     })
   }, [storeNodes, runner.currentStepData, visitedSet, selectedNodeId, editMode])
@@ -212,8 +222,8 @@ function GraphCanvas({ mode }: Props) {
     if (runner.currentStep >= 0) {
       for (let i = 0; i <= runner.currentStep; i += 1) {
         const step = runner.steps[i]
-        if (step && (step.action === 'compare' || step.action === 'traverse') && step.indices.length >= 2) {
-          const [a, b] = step.indices
+        if (step?.edge && step.action === 'insert') {
+          const [a, b] = step.edge
           const key = directed ? `${a}->${b}` : a < b ? `${a}-${b}` : `${b}-${a}`
           traversedKeys.add(key)
         }
@@ -223,31 +233,35 @@ function GraphCanvas({ mode }: Props) {
     return storeEdges.map(e => {
       const isActive = activeEdgeKey === e.id
       const isTraversed = traversedKeys.has(e.id) && !isActive
+      const isSelected = selectedEdgeId === e.id
       const label = weighted ? String(e.weight ?? 1) : undefined
+      const stroke = isActive
+        ? 'var(--dsa-primary-container)'
+        : isTraversed
+          ? 'var(--dsa-primary-dim)'
+          : isSelected
+            ? 'var(--dsa-text)'
+            : 'var(--dsa-outline)'
       return {
         id: e.id,
         source: String(e.source),
         target: String(e.target),
         type: 'smoothstep',
         animated: isActive,
-        markerEnd: directed ? { type: MarkerType.ArrowClosed, color: 'var(--dsa-outline)' } : undefined,
+        markerEnd: directed ? { type: MarkerType.ArrowClosed, color: stroke } : undefined,
         label,
         labelBgPadding: [6, 4],
         labelBgBorderRadius: 4,
         labelBgStyle: { fill: 'var(--dsa-card)', opacity: 0.9 },
         labelStyle: { fill: 'var(--dsa-text)', fontFamily: 'var(--font-mono-stack)', fontWeight: 600, fontSize: 11 },
         style: {
-          stroke: isActive
-            ? 'var(--dsa-primary-container)'
-            : isTraversed
-              ? 'var(--dsa-primary-dim)'
-              : 'var(--dsa-outline)',
-          strokeWidth: isActive ? 2.4 : isTraversed ? 2 : 1.6,
-          opacity: isActive ? 1 : isTraversed ? 0.85 : 0.55,
+          stroke,
+          strokeWidth: isActive ? 2.4 : isTraversed || isSelected ? 2 : 1.6,
+          opacity: isActive ? 1 : isTraversed || isSelected ? 0.9 : 0.6,
         },
       }
     })
-  }, [storeEdges, activeEdgeKey, runner.steps, runner.currentStep, directed, weighted])
+  }, [storeEdges, activeEdgeKey, runner.steps, runner.currentStep, directed, weighted, selectedEdgeId])
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -259,21 +273,25 @@ function GraphCanvas({ mode }: Props) {
         if (change.type === 'remove') {
           removeNode(Number(change.id))
         }
-        if (change.type === 'select' && change.selected) {
-          setSelectedNode(Number(change.id))
+        if (change.type === 'select') {
+          if (change.selected) setSelectedNode(Number(change.id))
+          else if (selectedNodeId === Number(change.id)) setSelectedNode(null)
         }
       }
     },
-    [moveNode, removeNode, setSelectedNode]
+    [moveNode, removeNode, selectedNodeId, setSelectedNode]
   )
 
   const handleEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
       for (const change of changes) {
-        if (change.type === 'remove') removeEdge(change.id)
+        if (change.type === 'remove') {
+          removeEdge(change.id)
+          if (selectedEdgeId === change.id) setSelectedEdgeId(null)
+        }
       }
     },
-    [removeEdge]
+    [removeEdge, selectedEdgeId]
   )
 
   const handleConnect = useCallback(
@@ -288,10 +306,13 @@ function GraphCanvas({ mode }: Props) {
     (event: React.MouseEvent) => {
       if (!editMode) {
         setSelectedNode(null)
+        setSelectedEdgeId(null)
         return
       }
       const pos = screenToFlowPosition({ x: event.clientX, y: event.clientY })
-      addNode(pos.x - 28, pos.y - 28)
+      const id = addNode(pos.x - 28, pos.y - 28)
+      if (id === null) setStatus(`Graphs support up to ${MAX_GRAPH_NODES} nodes.`)
+      else setStatus(`Added node ${id}. Drag its right connector to another node.`)
     },
     [editMode, addNode, screenToFlowPosition, setSelectedNode]
   )
@@ -307,6 +328,11 @@ function GraphCanvas({ mode }: Props) {
     },
     [weighted, storeEdges, setEdgeWeight]
   )
+
+  const handleEdgeClick = useCallback((_event: React.MouseEvent, edge: Edge) => {
+    setSelectedNode(null)
+    setSelectedEdgeId(edge.id)
+  }, [setSelectedNode])
 
   const handleRun = (values: Record<string, string>) => {
     const start = Number(values.start)
@@ -331,7 +357,37 @@ function GraphCanvas({ mode }: Props) {
     const rect = wrapperRef.current?.getBoundingClientRect()
     if (!rect) return
     const flowPos = screenToFlowPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
-    addNode(flowPos.x - 28, flowPos.y - 28)
+    const id = addNode(flowPos.x - 28, flowPos.y - 28)
+    if (id === null) setStatus(`Graphs support up to ${MAX_GRAPH_NODES} nodes.`)
+    else setStatus(`Added node ${id} at the center of the canvas.`)
+  }
+
+  const handleFitView = () => {
+    void fitView({ ...DEFAULT_FIT_OPTIONS, duration: 300 })
+    setStatus('Fit all graph nodes in the canvas.')
+  }
+
+  const handleAutoLayout = () => {
+    if (storeNodes.length === 0) return
+    const graph = new dagre.graphlib.Graph()
+    graph.setDefaultEdgeLabel(() => ({}))
+    graph.setGraph({
+      rankdir: (wrapperRef.current?.clientWidth ?? 0) < 640 ? 'TB' : 'LR',
+      nodesep: 56,
+      ranksep: 96,
+      marginx: 32,
+      marginy: 32,
+    })
+    for (const node of storeNodes) graph.setNode(String(node.id), { width: 56, height: 56 })
+    for (const edge of storeEdges) graph.setEdge(String(edge.source), String(edge.target))
+    dagre.layout(graph)
+    const nodes = storeNodes.map(node => {
+      const position = graph.node(String(node.id)) as { x: number; y: number }
+      return { ...node, x: position.x - 28, y: position.y - 28 }
+    })
+    load({ nodes, edges: storeEdges, directed, weighted })
+    requestAnimationFrame(() => void fitView({ ...DEFAULT_FIT_OPTIONS, duration: 300 }))
+    setStatus('Applied an automatic graph layout.')
   }
 
   const handleExport = () => {
@@ -365,10 +421,7 @@ function GraphCanvas({ mode }: Props) {
     const reader = new FileReader()
     reader.onload = () => {
       try {
-        const parsed = JSON.parse(String(reader.result)) as GraphSnapshot
-        if (!Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) {
-          throw new Error('Invalid graph schema')
-        }
+        const parsed = parseGraphSnapshot(JSON.parse(String(reader.result)))
         load(parsed)
         setStatus(`Imported ${parsed.nodes.length} node(s), ${parsed.edges.length} edge(s).`)
       } catch (error) {
@@ -380,9 +433,14 @@ function GraphCanvas({ mode }: Props) {
   }
 
   const visitOrder = useMemo(
-    () => runner.steps.filter(s => s.action === 'traverse' && s.indices.length > 0).map(s => s.indices[0]),
-    [runner.steps]
+    () => runner.steps
+      .slice(0, Math.max(0, runner.currentStep + 1))
+      .filter(s => s.action === 'traverse' && s.indices.length > 0)
+      .map(s => s.indices[0]),
+    [runner.steps, runner.currentStep]
   )
+
+  const selectedEdge = storeEdges.find(edge => edge.id === selectedEdgeId)
 
   const controls = (
     <div className="space-y-4">
@@ -414,18 +472,46 @@ function GraphCanvas({ mode }: Props) {
           <Plus className="h-3.5 w-3.5" strokeWidth={1.7} />
           Add Node
         </Button>
-        <Button variant="outline" size="sm" onClick={() => reset()} className="gap-1.5">
+        <Button variant="outline" size="sm" onClick={handleAutoLayout} className="gap-1.5" disabled={storeNodes.length === 0}>
+          <Route className="h-3.5 w-3.5" strokeWidth={1.7} />
+          Auto layout
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleFitView} className="gap-1.5" disabled={storeNodes.length === 0}>
+          <Focus className="h-3.5 w-3.5" strokeWidth={1.7} />
+          Fit
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            reset()
+            runner.setSteps([])
+            setSelectedEdgeId(null)
+            setStatus('Restored the default graph.')
+          }}
+          className="gap-1.5"
+        >
           <RefreshCcw className="h-3.5 w-3.5" strokeWidth={1.7} />
           Reset
         </Button>
-        <Button variant="outline" size="sm" onClick={() => load({ nodes: [], edges: [], directed, weighted })} className="gap-1.5">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            load({ nodes: [], edges: [], directed, weighted })
+            runner.setSteps([])
+            setSelectedEdgeId(null)
+            setStatus('Cleared the graph canvas.')
+          }}
+          className="gap-1.5"
+        >
           <Trash2 className="h-3.5 w-3.5" strokeWidth={1.7} />
           Clear
         </Button>
 
         <div className="h-6 w-px bg-[var(--ghost-border)]" />
 
-        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs text-dsa-muted hover:text-dsa-text">
+        <label className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs text-dsa-muted hover:text-dsa-text md:min-h-7">
           <input
             type="checkbox"
             checked={directed}
@@ -434,7 +520,7 @@ function GraphCanvas({ mode }: Props) {
           />
           Directed
         </label>
-        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs text-dsa-muted hover:text-dsa-text">
+        <label className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs text-dsa-muted hover:text-dsa-text md:min-h-7">
           <input
             type="checkbox"
             checked={weighted}
@@ -450,7 +536,7 @@ function GraphCanvas({ mode }: Props) {
           <Download className="h-3.5 w-3.5" strokeWidth={1.7} />
           Export
         </Button>
-        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md ghost-outline bg-transparent px-3 py-1.5 text-xs text-dsa-muted hover:text-dsa-text">
+        <label className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-md border border-dsa-border bg-transparent px-3 py-1.5 text-xs text-dsa-muted hover:border-dsa-border-strong hover:bg-dsa-card hover:text-dsa-text md:min-h-7">
           <Upload className="h-3.5 w-3.5" strokeWidth={1.7} />
           Import
           <input type="file" accept="application/json" className="hidden" onChange={handleImport} />
@@ -464,15 +550,37 @@ function GraphCanvas({ mode }: Props) {
       <div className="rounded-md surface-low p-3 text-xs text-dsa-muted">
         {editMode ? (
           <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5"><MousePointer2 className="h-3.5 w-3.5" /> Click canvas = add node</span>
-            <span>Drag handle from one node onto another = connect</span>
-            <span>Select + Backspace = delete</span>
-            {weighted && <span>Double-click edge = set weight</span>}
+            <span className="inline-flex items-center gap-1.5"><MousePointer2 className="h-3.5 w-3.5" /> Tap empty canvas to add a node</span>
+            <span>Drag the right connector to another node</span>
+            <span>Select an item, then press Backspace to delete</span>
+            {weighted && <span>Select an edge to edit its weight</span>}
           </div>
         ) : (
           <span>Drag nodes to rearrange. Switch to <span className="text-dsa-text">Edit</span> to modify graph topology.</span>
         )}
       </div>
+
+      {weighted && selectedEdge && (
+        <div className="flex flex-wrap items-end gap-3 rounded-md border border-dsa-border surface-floor px-4 py-3">
+          <label className="flex min-w-40 flex-col gap-1.5">
+            <span className="font-mono text-[10px] font-medium uppercase tracking-category text-dsa-muted-soft">
+              Edge {selectedEdge.source} to {selectedEdge.target} weight
+            </span>
+            <input
+              type="number"
+              value={selectedEdge.weight ?? 1}
+              onChange={event => {
+                const value = Number(event.target.value)
+                if (Number.isFinite(value)) setEdgeWeight(selectedEdge.id, value)
+              }}
+              className="h-11 rounded-md border border-dsa-border bg-dsa-card px-3 font-mono text-sm text-dsa-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dsa-primary-container/40 md:h-8"
+            />
+          </label>
+          <Button variant="ghost" size="sm" onClick={() => setSelectedEdgeId(null)}>
+            Done
+          </Button>
+        </div>
+      )}
 
       <ControlPanel
         fields={[{ name: 'start', label: 'Start Node', type: 'number', placeholder: '0' }]}
@@ -493,7 +601,7 @@ function GraphCanvas({ mode }: Props) {
             onReset={runner.reset}
             onSpeedChange={runner.setSpeed}
           />
-          <p className="text-xs text-dsa-muted">{status}</p>
+          <p className="text-xs text-dsa-muted" role="status" aria-live="polite">{status}</p>
           <p className="text-xs text-dsa-muted">
             <span className="text-dsa-text">Visit order:</span> {visitOrder.length ? visitOrder.join(' → ') : 'pending'}
           </p>
@@ -519,9 +627,14 @@ function GraphCanvas({ mode }: Props) {
       description={meta.description}
       complexityData={meta.complexity}
       controls={controls}
+      exportTargetSelector="[data-graph-canvas]"
     >
-      <div className="grid h-full min-h-80 grid-cols-1 gap-3 p-3 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-        <div ref={wrapperRef} className="relative h-105 rounded-md surface-low md:h-125">
+      <div className="grid h-full min-h-80 grid-cols-1 gap-3 p-2 sm:p-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
+        <div
+          ref={wrapperRef}
+          data-graph-canvas
+          className="relative h-[22rem] min-w-0 overflow-hidden rounded-md border border-dsa-border surface-low sm:h-[28rem] lg:h-[34rem]"
+        >
           {editMode && (
             <div className="pointer-events-none absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md border border-dsa-primary-container bg-dsa-card px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-category text-dsa-primary-container">
               <Pencil className="h-3 w-3" strokeWidth={1.8} />
@@ -531,7 +644,7 @@ function GraphCanvas({ mode }: Props) {
           <ReactFlow
             nodes={flowNodes}
             edges={flowEdges}
-            nodeTypes={STABLE_NODE_TYPES}
+            nodeTypes={GRAPH_NODE_TYPES}
             edgeTypes={STABLE_EDGE_TYPES}
             fitView
             fitViewOptions={DEFAULT_FIT_OPTIONS}
@@ -539,12 +652,15 @@ function GraphCanvas({ mode }: Props) {
             onEdgesChange={handleEdgesChange}
             onConnect={handleConnect}
             onPaneClick={handlePaneClick}
+            onEdgeClick={handleEdgeClick}
             onEdgeDoubleClick={handleEdgeDoubleClick}
             nodesDraggable
             nodesConnectable={editMode}
             elementsSelectable
             deleteKeyCode={editMode ? ['Backspace', 'Delete'] : null}
             connectionRadius={32}
+            minZoom={0.25}
+            maxZoom={1.8}
             proOptions={DEFAULT_PRO_OPTIONS}
           >
             <Background color="rgba(131,148,143,0.18)" gap={28} variant={BackgroundVariant.Dots} />
@@ -552,7 +668,7 @@ function GraphCanvas({ mode }: Props) {
           </ReactFlow>
         </div>
 
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           <div className="rounded-md surface-low p-3">
             <div className="mb-2 inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-category text-dsa-muted">
               <Network className="h-3.5 w-3.5" strokeWidth={1.7} /> Graph stats

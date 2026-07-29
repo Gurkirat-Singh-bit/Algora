@@ -4,10 +4,10 @@ import { useId } from 'react'
 import { cn } from '@/lib/utils'
 
 /**
- * Algora mark — a rounded caret "A" in the brand green gradient.
+ * Algora mark: a rounded caret "A" in the brand green gradient.
  * The gradient id is generated per instance with useId so multiple copies
- * never collide (a shared id defined inside a display:none subtree — e.g. the
- * md:hidden mobile header — would leave every other reference unpainted).
+ * never collide. A shared id defined inside a display:none subtree, such as the
+ * md:hidden mobile header, would leave every other reference unpainted.
  * The gradient is fixed green by design; it stays on-brand in light and dark.
  */
 export function Logo({ className }: { className?: string }) {

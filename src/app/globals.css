@@ -6,7 +6,7 @@
   --font-sans-stack: var(--font-geist-sans), 'Geist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono-stack: var(--font-geist-mono), 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Dark — OKLCH neutrals tinted toward green. No pure #000. */
+  /* Dark OKLCH neutrals tinted toward green. No pure #000. */
   --color-base-00: oklch(0.10 0.005 150);
   --color-base-05: oklch(0.13 0.005 150);
   --color-base-08: oklch(0.155 0.006 150);
@@ -151,6 +151,7 @@ html, body { min-height: 100%; }
 html {
   font-size: var(--ui-font-scale);
   font-family: var(--font-sans-stack);
+  scroll-padding-top: 4rem;
 }
 
 body {
@@ -188,6 +189,17 @@ code, kbd, pre, samp, .font-mono {
 }
 .animate-rise { animation: rise-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 ::-webkit-scrollbar       { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
@@ -201,17 +213,10 @@ code, kbd, pre, samp, .font-mono {
 .react-flow__background { background: transparent; }
 .react-flow__node { cursor: pointer; }
 
-/* Hide the default connection-handle dots so nodes read as data cells,
-   not graph ports. Edges still anchor to the handle positions. */
+/* Custom graph nodes reveal their connection handles only in edit mode. */
 .react-flow__handle {
-  opacity: 0;
-  min-width: 0;
-  min-height: 0;
-  width: 1px;
-  height: 1px;
   border: 0;
   background: transparent;
-  pointer-events: none;
 }
 
 /* Controls: rounded, hairline-bordered pill that matches the panel theme. */

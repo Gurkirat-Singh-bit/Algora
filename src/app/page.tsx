@@ -35,7 +35,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen surface-bg text-dsa-text">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-dsa-border bg-dsa-surface/85 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-dsa-border bg-dsa-surface">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-5 md:px-8">
           <Link href="/" className="inline-flex items-center gap-2 text-dsa-text-strong">
             <Logo className="h-6 w-6" />
@@ -65,7 +65,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-5 md:px-8">
+      <main id="main-content" className="mx-auto w-full max-w-6xl px-5 md:px-8">
         {/* Hero */}
         <section className="flex flex-col items-center gap-6 pb-16 pt-16 text-center md:pt-24">
           <Logo className="h-16 w-16 md:h-20 md:w-20" />
@@ -78,7 +78,7 @@ export default function LandingPage() {
           <p className="max-w-[58ch] text-[15px] leading-7 text-dsa-muted md:text-base">
             Algora is a step-through visualizer for data structures and algorithms.
             Pick a topic, run an operation, and watch every index, pointer, and swap
-            unfold — one step at a time.
+            unfold, one step at a time.
           </p>
           <div className="flex flex-col items-center gap-3 pt-2 sm:flex-row">
             <Link
@@ -181,7 +181,7 @@ export default function LandingPage() {
           <div className="inline-flex items-center gap-2">
             <Logo className="h-4 w-4" />
             <span className="text-dsa-text">Algora</span>
-            <span className="text-dsa-muted-soft">— MIT licensed</span>
+            <span className="text-dsa-muted-soft">MIT licensed</span>
           </div>
           <div className="flex items-center gap-5">
             <Link href="/learn" className="transition-colors hover:text-dsa-text">Learning path</Link>

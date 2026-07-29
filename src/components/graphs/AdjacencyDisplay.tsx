@@ -16,7 +16,7 @@ export function AdjacencyDisplay({ adjacency, activeNode }: Props) {
   const [view, setView] = useState<ViewMode>('list')
 
   const nodes = useMemo(() => Object.keys(adjacency).map(Number).sort((a, b) => a - b), [adjacency])
-  const matrix = useMemo(() => buildAdjacencyMatrix(nodes.length, adjacency), [nodes.length, adjacency])
+  const matrix = useMemo(() => buildAdjacencyMatrix(nodes, adjacency), [nodes, adjacency])
 
   return (
     <div className="rounded-lg border border-dsa-border bg-dsa-panel/45 p-3">
@@ -27,7 +27,11 @@ export function AdjacencyDisplay({ adjacency, activeNode }: Props) {
         </TabsList>
 
         <TabsContent value="list" className="space-y-2">
-          {nodes.map(node => (
+          {nodes.length === 0 ? (
+            <p className="px-2 py-4 text-center text-xs text-dsa-muted">
+              Add a node to build the adjacency view.
+            </p>
+          ) : nodes.map(node => (
             <div
               key={node}
               className="rounded-md px-2 py-1.5 text-xs"
@@ -38,14 +42,20 @@ export function AdjacencyDisplay({ adjacency, activeNode }: Props) {
                     : 'transparent',
               }}
             >
-              <span className="font-semibold text-dsa-text">{node}</span>
-              <span className="text-dsa-muted">: [{(adjacency[node] ?? []).join(', ')}]</span>
+              <span className="font-mono font-semibold text-dsa-text">{node}</span>
+              <span className="font-mono text-dsa-muted">: [{(adjacency[node] ?? []).join(', ')}]</span>
             </div>
           ))}
         </TabsContent>
 
-        <TabsContent value="matrix" className="overflow-x-auto">
-          <table className="w-full min-w-80 border-collapse text-xs">
+        <TabsContent value="matrix" className="max-w-full overflow-x-auto">
+          {nodes.length === 0 ? (
+            <p className="px-2 py-4 text-center text-xs text-dsa-muted">
+              Add a node to build the matrix.
+            </p>
+          ) : (
+          <table className="w-full min-w-max border-collapse font-mono text-xs">
+            <caption className="sr-only">Graph adjacency matrix</caption>
             <thead>
               <tr>
                 <th className="border border-dsa-border px-2 py-1 text-dsa-muted">#</th>
@@ -89,6 +99,7 @@ export function AdjacencyDisplay({ adjacency, activeNode }: Props) {
               ))}
             </tbody>
           </table>
+          )}
         </TabsContent>
       </Tabs>
     </div>

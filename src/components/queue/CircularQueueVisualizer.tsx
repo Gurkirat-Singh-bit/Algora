@@ -79,7 +79,7 @@ export function CircularQueueVisualizer({ state, currentStepData }: Props) {
                     empty && 'opacity-55'
                   )}
                 >
-                  {empty ? '—' : String(value)}
+                  {empty ? 'Empty' : String(value)}
                 </motion.div>
                 <span className="font-mono text-[10px] tabular-nums text-dsa-muted-soft">{index}</span>
               </div>

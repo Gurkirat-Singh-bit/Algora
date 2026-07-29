@@ -10,6 +10,7 @@ interface Props {
   children: React.ReactNode
   controls?: React.ReactNode
   headerExtra?: React.ReactNode
+  exportTargetSelector?: string
 }
 
 export function VisualizerLayout({
@@ -19,6 +20,7 @@ export function VisualizerLayout({
   children,
   controls,
   headerExtra,
+  exportTargetSelector,
 }: Props) {
   return (
     <div className="flex min-h-screen flex-col">
@@ -35,7 +37,10 @@ export function VisualizerLayout({
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {headerExtra}
-              <ExportButton filename={`${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`} />
+              <ExportButton
+                targetSelector={exportTargetSelector}
+                filename={`${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`}
+              />
             </div>
           </div>
           {complexityData && complexityData.length > 0 && (

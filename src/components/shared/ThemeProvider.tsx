@@ -13,6 +13,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const colorScheme = useUIStore(s => s.colorScheme)
 
   useEffect(() => {
+    document.documentElement.dataset.hydrated = 'true'
+  }, [])
+
+  useEffect(() => {
     const apply = () => {
       const resolved = resolveScheme(colorScheme)
       document.documentElement.setAttribute('data-color-scheme', resolved)

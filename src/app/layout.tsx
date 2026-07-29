@@ -17,8 +17,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${GeistSans.variable} ${GeistMono.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen surface-bg font-sans text-dsa-text antialiased">
-        <ThemeProvider>{children}</ThemeProvider>
+      <body className="min-h-screen overflow-x-hidden surface-bg font-sans text-dsa-text antialiased">
+        <ThemeProvider>
+          <a
+            href="#main-content"
+            className="fixed left-3 top-3 z-[100] -translate-y-20 rounded-md bg-dsa-primary-container px-4 py-2 text-sm font-semibold text-[var(--on-accent)] transition-transform focus:translate-y-0"
+          >
+            Skip to main content
+          </a>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -39,6 +39,13 @@ const modules = [
     topics: ['/binary-tree', '/bst', '/heap', '/graphs'],
     emphasis: 'Advanced',
   },
+  {
+    id: '06',
+    title: 'Hashing · Prefixes · Sets',
+    description: 'Fast key lookup, prefix trees, and dynamic connectivity.',
+    topics: ['/hash-table', '/trie', '/union-find'],
+    emphasis: 'Advanced',
+  },
 ]
 
 export default function HomePage() {
@@ -61,10 +68,10 @@ export default function HomePage() {
           </p>
           <div className="flex items-center gap-3 pt-1">
             <Link
-              href="/arrays"
+              href="/learn/arrays"
               className="inline-flex h-9 items-center gap-2 rounded-md bg-dsa-primary-container px-4 text-[13px] font-medium tracking-tight text-[oklch(0.16_0.020_150)] transition-colors hover:bg-dsa-active"
             >
-              Start with arrays
+              Read the first guide
               <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.8} />
             </Link>
             <Link
@@ -102,7 +109,7 @@ export default function HomePage() {
                   return (
                     <li key={item.href}>
                       <Link
-                        href={item.href}
+                        href={`/learn/${item.href.slice(1)}`}
                         className="group flex h-full items-center gap-3 bg-dsa-bg/60 p-4 transition-colors hover:bg-dsa-card"
                       >
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-dsa-border bg-dsa-card text-dsa-muted group-hover:border-dsa-border-strong group-hover:text-dsa-primary-container">
@@ -118,7 +125,7 @@ export default function HomePage() {
                               strokeWidth={1.8}
                             />
                           </div>
-                          <p className="mt-0.5 truncate text-[12px] text-dsa-muted">{item.summary}</p>
+                          <p className="mt-0.5 line-clamp-2 text-[12px] leading-5 text-dsa-muted">{item.summary}</p>
                         </div>
                       </Link>
                     </li>

@@ -137,7 +137,9 @@ export function DoublyLinkedListVisualizer({ mode }: Props) {
     const value = Number.parseFloat(rawValue)
 
     if (!Number.isFinite(value)) {
-      runner.setSteps(infoOnlyStep('Enter a numeric value before inserting.'))
+      const message = 'Enter a numeric value before inserting.'
+      runner.setSteps(infoOnlyStep(message))
+      setStatus(message)
       return
     }
 
@@ -145,6 +147,7 @@ export function DoublyLinkedListVisualizer({ mode }: Props) {
     const insertIndex = resolveInsertIndex(listValues.length, position)
     setListValues(insertAt(listValues, value, insertIndex))
     runner.setSteps(steps)
+    setStatus(`Insert ${value} at index ${insertIndex}.`)
   }
 
   const runDelete = (position: PositionInput): void => {
@@ -153,6 +156,9 @@ export function DoublyLinkedListVisualizer({ mode }: Props) {
 
     if (deleteIndex !== null) {
       setListValues(deleteAt(listValues, deleteIndex))
+      setStatus(`Delete the node at index ${deleteIndex}.`)
+    } else {
+      setStatus(steps.at(-1)?.description ?? 'Delete could not be completed.')
     }
 
     runner.setSteps(steps)
@@ -160,10 +166,12 @@ export function DoublyLinkedListVisualizer({ mode }: Props) {
 
   const runForwardTraverse = (): void => {
     runner.setSteps(doublyForwardTraverseSteps(listValues))
+    setStatus(`Traverse ${listValues.length} nodes from head to tail.`)
   }
 
   const runBackwardTraverse = (): void => {
     runner.setSteps(doublyBackwardTraverseSteps(listValues))
+    setStatus(`Traverse ${listValues.length} nodes from tail to head.`)
   }
 
   const controlsByMode: { fields: FieldDef[]; actions: ActionDef[] } = (() => {

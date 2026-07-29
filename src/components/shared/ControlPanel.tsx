@@ -1,7 +1,7 @@
 'use client'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 export interface FieldDef {
   name: string
@@ -23,6 +23,7 @@ interface Props {
 }
 
 export function ControlPanel({ fields, actions }: Props) {
+  const formId = useId()
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(fields.map(f => [f.name, '']))
   )
@@ -30,11 +31,15 @@ export function ControlPanel({ fields, actions }: Props) {
   return (
     <div className="flex flex-wrap items-end gap-x-3 gap-y-3 rounded-md surface-floor px-4 py-3 hairline border">
       {fields.map(f => (
-        <div key={f.name} className="flex min-w-40 flex-col gap-1.5">
-          <label className="font-mono text-[10px] font-medium uppercase tracking-category text-dsa-muted-soft">
+        <div key={f.name} className="flex min-w-0 flex-1 basis-40 flex-col gap-1.5 md:max-w-64">
+          <label
+            htmlFor={`${formId}-${f.name}`}
+            className="font-mono text-[10px] font-medium uppercase tracking-category text-dsa-muted-soft"
+          >
             {f.label}
           </label>
           <Input
+            id={`${formId}-${f.name}`}
             type={f.type ?? 'text'}
             placeholder={f.placeholder}
             value={values[f.name]}
@@ -47,6 +52,7 @@ export function ControlPanel({ fields, actions }: Props) {
         {actions.map(action => (
           <Button
             key={action.label}
+            type="button"
             variant={action.variant ?? 'default'}
             size="sm"
             onClick={() => action.onClick(values)}

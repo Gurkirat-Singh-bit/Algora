@@ -8,7 +8,7 @@ const shortcuts: { keys: string[]; label: string }[] = [
   { keys: ['Space'], label: 'Play / pause (reset when complete)' },
   { keys: ['←', '→'], label: 'Step backward / forward' },
   { keys: ['R'], label: 'Reset to the first step' },
-  { keys: ['1', '–', '5'], label: 'Set playback speed (slow to fast)' },
+  { keys: ['1', 'to', '5'], label: 'Set playback speed (slow to fast)' },
 ]
 
 function Key({ children }: { children: React.ReactNode }) {
@@ -67,7 +67,7 @@ export function ShortcutsHelp() {
               <li key={s.label} className="flex items-center justify-between gap-4 py-2.5">
                 <span className="text-[13px] text-dsa-muted">{s.label}</span>
                 <span className="flex shrink-0 items-center gap-1">
-                  {s.keys.map((k, i) => (k === '–' ? <span key={i} className="text-dsa-muted-soft">to</span> : <Key key={i}>{k}</Key>))}
+                  {s.keys.map((k, i) => (k === 'to' ? <span key={i} className="text-dsa-muted-soft">to</span> : <Key key={i}>{k}</Key>))}
                 </span>
               </li>
             ))}

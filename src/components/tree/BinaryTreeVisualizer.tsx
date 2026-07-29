@@ -189,9 +189,10 @@ export function BinaryTreeVisualizer({ mode }: Props) {
   const [status, setStatus] = useState('Run traversal to animate tree visit order.')
 
   const meta = modeMeta[mode]
-  const currentIndices = runner.currentStepData?.indices ?? []
-
-  const flow = useMemo(() => buildFlow(values, currentIndices, nodePositions), [values, currentIndices, nodePositions])
+  const flow = useMemo(
+    () => buildFlow(values, runner.currentStepData?.indices ?? [], nodePositions),
+    [values, runner.currentStepData, nodePositions]
+  )
 
   const visitOrder = useMemo(() => {
     return runner.steps

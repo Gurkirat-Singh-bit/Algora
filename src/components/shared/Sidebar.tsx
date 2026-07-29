@@ -2,10 +2,16 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useMemo, useState } from 'react'
-import { ChevronRight, ChevronsLeft, ChevronsRight, Menu, Search, X } from 'lucide-react'
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronRight, ChevronsLeft, ChevronsRight, Menu, Search } from 'lucide-react'
 
-import { categories, iconMap, navItems, REPO_URL } from '@/constants/navigation'
+import {
+  categories,
+  iconMap,
+  navItems,
+  REPO_URL,
+  type NavItem,
+} from '@/constants/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,6 +34,110 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 
+interface NavigationGroup {
+  category: string
+  items: NavItem[]
+}
+
+interface NavListProps {
+  groups: NavigationGroup[]
+  sectionCollapsed: Record<string, boolean>
+  pathname: string
+  onToggleSection: (category: string) => void
+  onNavigate?: () => void
+}
+
+function NavList({
+  groups,
+  sectionCollapsed,
+  pathname,
+  onToggleSection,
+  onNavigate,
+}: NavListProps) {
+  return (
+    <nav aria-label="Learning topics" className="flex-1 overflow-y-auto px-3 pb-6">
+      {groups.length === 0 ? (
+        <div className="mx-2 mt-4 rounded-md bg-dsa-card px-3 py-4 text-xs text-dsa-muted">
+          No matching topics.
+        </div>
+      ) : (
+        <div className="space-y-5 pt-2">
+          {groups.map(group => {
+            const collapsed = sectionCollapsed[group.category]
+            const sectionId = `nav-${group.category.toLowerCase().replaceAll(' ', '-')}`
+            return (
+              <section key={group.category}>
+                <button
+                  type="button"
+                  aria-expanded={!collapsed}
+                  aria-controls={sectionId}
+                  onClick={() => onToggleSection(group.category)}
+                  className="flex min-h-11 w-full items-center justify-between rounded-md px-2 py-1.5 text-[10px] font-semibold uppercase tracking-category text-dsa-muted-soft hover:text-dsa-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dsa-primary-container/40 md:min-h-8"
+                >
+                  <span>{group.category}</span>
+                  <ChevronRight
+                    aria-hidden="true"
+                    className={cn('h-3 w-3 transition-transform', !collapsed && 'rotate-90')}
+                    strokeWidth={2}
+                  />
+                </button>
+                {!collapsed && (
+                  <ul id={sectionId} className="mt-1 space-y-px">
+                    {group.items.map(item => {
+                      const Icon = iconMap[item.icon]
+                      const active = pathname === item.href
+                      return (
+                        <li key={item.href}>
+                          <Link
+                            href={item.href}
+                            onClick={onNavigate}
+                            aria-current={active ? 'page' : undefined}
+                            className={cn(
+                              'group relative flex min-h-11 items-center gap-2.5 rounded-md px-2.5 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dsa-primary-container/40 md:min-h-8',
+                              active
+                                ? 'bg-dsa-card text-dsa-text-strong'
+                                : 'text-dsa-muted hover:bg-dsa-card/60 hover:text-dsa-text'
+                            )}
+                          >
+                            <Icon
+                              aria-hidden="true"
+                              className={cn(
+                                'h-3.5 w-3.5 shrink-0',
+                                active
+                                  ? 'text-dsa-primary-container'
+                                  : 'text-dsa-muted-soft group-hover:text-dsa-text'
+                              )}
+                              strokeWidth={1.7}
+                            />
+                            <span className="truncate text-[13px] font-medium tracking-tight">
+                              {item.label}
+                            </span>
+                            {active && (
+                              <span
+                                aria-hidden="true"
+                                className="ml-auto h-1.5 w-1.5 rounded-full bg-dsa-primary-container"
+                              />
+                            )}
+                          </Link>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </section>
+            )
+          })}
+        </div>
+      )}
+    </nav>
+  )
+}
+
+function isEditable(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
+}
+
 export function Sidebar() {
   const pathname = usePathname()
   const sidebarCollapsed = useUIStore(s => s.sidebarCollapsed)
@@ -35,6 +145,19 @@ export function Sidebar() {
   const [sectionOverrides, setSectionOverrides] = useState<Record<string, boolean>>({})
   const [search, setSearch] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
+  const desktopSearchRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const handleSearchShortcut = (event: KeyboardEvent) => {
+      if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey || isEditable(event.target)) {
+        return
+      }
+      event.preventDefault()
+      desktopSearchRef.current?.focus()
+    }
+    window.addEventListener('keydown', handleSearchShortcut)
+    return () => window.removeEventListener('keydown', handleSearchShortcut)
+  }, [])
 
   const activeCategory = useMemo(
     () => navItems.find(item => item.href === pathname)?.category,
@@ -76,71 +199,6 @@ export function Sidebar() {
     setSectionOverrides(prev => ({ ...prev, [category]: !sectionCollapsed[category] }))
   }
 
-  const NavList = ({ onNavigate }: { onNavigate?: () => void }) => (
-    <nav className="flex-1 overflow-y-auto px-3 pb-6">
-      {filteredGroups.length === 0 ? (
-        <div className="mx-2 mt-4 rounded-md bg-dsa-card px-3 py-4 text-xs text-dsa-muted">
-          No matches.
-        </div>
-      ) : (
-        <div className="space-y-6 pt-2">
-          {filteredGroups.map(group => {
-            const collapsed = sectionCollapsed[group.category]
-            return (
-              <section key={group.category}>
-                <button
-                  type="button"
-                  onClick={() => toggleSection(group.category)}
-                  className="flex w-full items-center justify-between px-2 py-1.5 text-[10px] font-semibold uppercase tracking-category text-dsa-muted-soft hover:text-dsa-text"
-                >
-                  <span>{group.category}</span>
-                  <ChevronRight
-                    className={cn('h-3 w-3 transition-transform', !collapsed && 'rotate-90')}
-                    strokeWidth={2}
-                  />
-                </button>
-                {!collapsed && (
-                  <ul className="mt-1 space-y-px">
-                    {group.items.map(item => {
-                      const Icon = iconMap[item.icon]
-                      const active = pathname === item.href
-                      return (
-                        <li key={item.href}>
-                          <Link
-                            href={item.href}
-                            onClick={onNavigate}
-                            className={cn(
-                              'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 transition-colors',
-                              active
-                                ? 'bg-dsa-card text-dsa-text-strong'
-                                : 'text-dsa-muted hover:bg-dsa-card/60 hover:text-dsa-text'
-                            )}
-                          >
-                            <Icon
-                              className={cn(
-                                'h-3.5 w-3.5 shrink-0',
-                                active ? 'text-dsa-primary-container' : 'text-dsa-muted-soft group-hover:text-dsa-text'
-                              )}
-                              strokeWidth={1.7}
-                            />
-                            <span className="truncate text-[13px] font-medium tracking-tight">{item.label}</span>
-                            {active && (
-                              <span className="ml-auto h-1 w-1 rounded-full bg-dsa-primary-container" />
-                            )}
-                          </Link>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                )}
-              </section>
-            )
-          })}
-        </div>
-      )}
-    </nav>
-  )
-
   return (
     <>
       {/* Mobile bar */}
@@ -166,14 +224,17 @@ export function Sidebar() {
                     <Logo className="h-5 w-5" />
                     <span className="text-[13px] font-semibold tracking-tight text-dsa-text-strong">Algora</span>
                   </Link>
-                  <Button variant="ghost" size="icon" onClick={() => setMobileOpen(false)} aria-label="Close">
-                    <X className="h-4 w-4" strokeWidth={1.8} />
-                  </Button>
                 </div>
                 <div className="border-b border-dsa-border px-3 py-2.5">
                   <SearchBox value={search} onChange={setSearch} />
                 </div>
-                <NavList onNavigate={() => setMobileOpen(false)} />
+                <NavList
+                  groups={filteredGroups}
+                  sectionCollapsed={sectionCollapsed}
+                  pathname={pathname}
+                  onToggleSection={toggleSection}
+                  onNavigate={() => setMobileOpen(false)}
+                />
               </div>
             </SheetContent>
           </Sheet>
@@ -227,7 +288,7 @@ export function Sidebar() {
             <TooltipProvider delayDuration={0}>
               <nav className="flex-1 overflow-y-auto py-3">
                 <ul className="space-y-1 px-2">
-                  {navItems.slice(1).map(item => {
+                  {navItems.map(item => {
                     const Icon = iconMap[item.icon]
                     const active = pathname === item.href
                     return (
@@ -237,6 +298,7 @@ export function Sidebar() {
                             <Link
                               href={item.href}
                               aria-label={item.label}
+                              aria-current={active ? 'page' : undefined}
                               className={cn(
                                 'flex h-9 items-center justify-center rounded-md transition-colors',
                                 active
@@ -274,9 +336,14 @@ export function Sidebar() {
         ) : (
           <>
             <div className="border-b border-dsa-border px-3 py-2.5">
-              <SearchBox value={search} onChange={setSearch} />
+              <SearchBox ref={desktopSearchRef} value={search} onChange={setSearch} />
             </div>
-            <NavList />
+            <NavList
+              groups={filteredGroups}
+              sectionCollapsed={sectionCollapsed}
+              pathname={pathname}
+              onToggleSection={toggleSection}
+            />
             <div className="flex flex-col gap-2.5 border-t border-dsa-border px-4 py-3">
               {REPO_URL && (
                 <a
@@ -298,7 +365,10 @@ export function Sidebar() {
   )
 }
 
-function SearchBox({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+const SearchBox = forwardRef<
+  HTMLInputElement,
+  { value: string; onChange: (value: string) => void }
+>(function SearchBox({ value, onChange }, ref) {
   return (
     <div className="group relative">
       <Search
@@ -306,8 +376,10 @@ function SearchBox({ value, onChange }: { value: string; onChange: (v: string) =
         strokeWidth={1.8}
       />
       <Input
+        ref={ref}
         value={value}
         onChange={e => onChange(e.target.value)}
+        aria-label="Search learning topics"
         placeholder="Search topics"
         className="h-8 rounded-md border border-dsa-border bg-dsa-card pl-8 pr-2 text-[13px] placeholder:text-dsa-muted-soft focus:border-dsa-border-strong"
       />
@@ -316,4 +388,4 @@ function SearchBox({ value, onChange }: { value: string; onChange: (v: string) =
       </kbd>
     </div>
   )
-}
+})

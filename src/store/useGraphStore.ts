@@ -2,33 +2,20 @@
 
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
+import {
+  graphEdgeId,
+  MAX_GRAPH_NODES,
+  parseGraphSnapshot,
+  type GraphSnapshot,
+} from '@/lib/graph'
 
-export interface GraphNodeRecord {
-  id: number
-  x: number
-  y: number
-  label?: string
-}
-
-export interface GraphEdgeRecord {
-  id: string
-  source: number
-  target: number
-  weight?: number
-}
-
-export interface GraphSnapshot {
-  nodes: GraphNodeRecord[]
-  edges: GraphEdgeRecord[]
-  directed: boolean
-  weighted: boolean
-}
+export type { GraphEdgeRecord, GraphNodeRecord, GraphSnapshot } from '@/lib/graph'
 
 interface GraphState extends GraphSnapshot {
   selectedNodeId: number | null
   load: (snapshot: GraphSnapshot) => void
   reset: () => void
-  addNode: (x: number, y: number) => number
+  addNode: (x: number, y: number) => number | null
   removeNode: (id: number) => void
   moveNode: (id: number, x: number, y: number) => void
   addEdge: (source: number, target: number, weight?: number) => void
@@ -62,27 +49,19 @@ const DEFAULT_GRAPH: GraphSnapshot = {
   weighted: false,
 }
 
-function edgeId(source: number, target: number, directed: boolean): string {
-  if (directed) return `${source}->${target}`
-  return source < target ? `${source}-${target}` : `${target}-${source}`
-}
-
 export const useGraphStore = create<GraphState>()(
   persist(
     (set, get) => ({
       ...DEFAULT_GRAPH,
       selectedNodeId: null,
-      load: snapshot =>
-        set({
-          nodes: snapshot.nodes,
-          edges: snapshot.edges,
-          directed: snapshot.directed,
-          weighted: snapshot.weighted,
-          selectedNodeId: null,
-        }),
+      load: snapshot => {
+        const parsed = parseGraphSnapshot(snapshot)
+        set({ ...parsed, selectedNodeId: null })
+      },
       reset: () => set({ ...DEFAULT_GRAPH, selectedNodeId: null }),
       addNode: (x, y) => {
         const nodes = get().nodes
+        if (nodes.length >= MAX_GRAPH_NODES) return null
         const id = nodes.length === 0 ? 0 : Math.max(...nodes.map(n => n.id)) + 1
         set({ nodes: [...nodes, { id, x, y }] })
         return id
@@ -102,7 +81,7 @@ export const useGraphStore = create<GraphState>()(
       addEdge: (source, target, weight) => {
         if (source === target) return
         const { directed, edges } = get()
-        const id = edgeId(source, target, directed)
+        const id = graphEdgeId(source, target, directed)
         if (edges.some(e => e.id === id)) return
         set({ edges: [...edges, { id, source, target, ...(weight !== undefined ? { weight } : {}) }] })
       },
@@ -116,7 +95,10 @@ export const useGraphStore = create<GraphState>()(
       },
       setDirected: directed => {
         set(state => {
-          const remapped = state.edges.map(e => ({ ...e, id: edgeId(e.source, e.target, directed) }))
+          const remapped = state.edges.map(e => ({
+            ...e,
+            id: graphEdgeId(e.source, e.target, directed),
+          }))
           const seen = new Set<string>()
           const dedup = remapped.filter(e => {
             if (seen.has(e.id)) return false
@@ -139,7 +121,21 @@ export const useGraphStore = create<GraphState>()(
     {
       name: 'dsa-graph',
       storage: createJSONStorage(() => localStorage),
-      version: 1,
+      version: 2,
+      partialize: state => ({
+        nodes: state.nodes,
+        edges: state.edges,
+        directed: state.directed,
+        weighted: state.weighted,
+      }),
+      merge: (persisted, current) => {
+        try {
+          const snapshot = parseGraphSnapshot(persisted)
+          return { ...current, ...snapshot, selectedNodeId: null }
+        } catch {
+          return current
+        }
+      },
     }
   )
 )

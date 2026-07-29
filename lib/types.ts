@@ -14,6 +14,7 @@ export interface Step {
   description: string
   highlightColor?: string
   pseudoCodeLine?: number
+  edge?: readonly [number, number]
 }
 
 export interface NodeData {

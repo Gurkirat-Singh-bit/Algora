@@ -22,7 +22,13 @@ export function useAnimationEngine() {
 
   const setSteps = useCallback((steps: Step[]) => {
     clearTimer()
-    setState({ steps, currentStep: 0, isPlaying: false, speed: 3, isComplete: false })
+    setState(prev => ({
+      steps,
+      currentStep: steps.length > 0 ? 0 : -1,
+      isPlaying: false,
+      speed: prev.speed,
+      isComplete: steps.length === 0,
+    }))
   }, [clearTimer])
 
   const play = useCallback(() => {
@@ -71,7 +77,7 @@ export function useAnimationEngine() {
         ...prev,
         currentStep: clamped,
         isPlaying: false,
-        isComplete: clamped >= prev.steps.length - 1 ? false : false,
+        isComplete: clamped >= prev.steps.length - 1,
       }
     })
   }, [clearTimer])

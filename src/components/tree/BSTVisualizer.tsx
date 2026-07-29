@@ -163,10 +163,11 @@ export function BSTVisualizer({ mode }: Props) {
   const [status, setStatus] = useState('Run a BST operation to generate traversal steps.')
 
   const meta = modeMeta[mode]
-  const highlightedValues = runner.currentStepData?.indices ?? []
-
   const root = useMemo(() => buildBstFromValues(values), [values])
-  const flow = useMemo(() => buildFlow(root, highlightedValues, nodePositions), [root, highlightedValues, nodePositions])
+  const flow = useMemo(
+    () => buildFlow(root, runner.currentStepData?.indices ?? [], nodePositions),
+    [root, runner.currentStepData, nodePositions]
+  )
 
   const handleRun = (formValues: Record<string, string>) => {
     const value = Number(formValues.value)

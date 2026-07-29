@@ -47,13 +47,18 @@ export function buildAdjacencyFromSnapshot(snapshot: GraphSnapshotInput): GraphA
   return adjacency
 }
 
-export function buildAdjacencyMatrix(nodeCount: number, adjacency: GraphAdjList): number[][] {
-  const matrix = Array.from({ length: nodeCount }, () => Array.from({ length: nodeCount }, () => 0))
+export function buildAdjacencyMatrix(nodeIds: readonly number[], adjacency: GraphAdjList): number[][] {
+  const indexById = new Map(nodeIds.map((id, index) => [id, index]))
+  const matrix = Array.from(
+    { length: nodeIds.length },
+    () => Array.from({ length: nodeIds.length }, () => 0)
+  )
 
-  for (let from = 0; from < nodeCount; from += 1) {
+  for (const [rowIndex, from] of nodeIds.entries()) {
     const neighbors = adjacency[from] ?? []
     for (const to of neighbors) {
-      matrix[from][to] = 1
+      const columnIndex = indexById.get(to)
+      if (columnIndex !== undefined) matrix[rowIndex][columnIndex] = 1
     }
   }
 
@@ -74,6 +79,7 @@ export function bfsSteps(adjacency: GraphAdjList, start: number): Step[] {
     action: 'insert',
     indices: [start],
     description: `Initialize BFS queue with start node ${start}.`,
+    pseudoCodeLine: 0,
   })
 
   while (queue.length > 0) {
@@ -83,6 +89,7 @@ export function bfsSteps(adjacency: GraphAdjList, start: number): Step[] {
       action: 'traverse',
       indices: [current],
       description: `Dequeue node ${current} and visit it.`,
+      pseudoCodeLine: 2,
     })
 
     for (const neighbor of adjacency[current] ?? []) {
@@ -90,6 +97,8 @@ export function bfsSteps(adjacency: GraphAdjList, start: number): Step[] {
         action: 'compare',
         indices: [current, neighbor],
         description: `Inspect edge ${current} -> ${neighbor}.`,
+        pseudoCodeLine: 3,
+        edge: [current, neighbor],
       })
 
       if (!visited.has(neighbor)) {
@@ -99,6 +108,8 @@ export function bfsSteps(adjacency: GraphAdjList, start: number): Step[] {
           action: 'insert',
           indices: [neighbor],
           description: `Node ${neighbor} is unvisited. Enqueue it.`,
+          pseudoCodeLine: 4,
+          edge: [current, neighbor],
         })
       }
     }
@@ -108,6 +119,7 @@ export function bfsSteps(adjacency: GraphAdjList, start: number): Step[] {
     action: 'info',
     indices: Array.from(visited),
     description: `BFS complete. Visited order size: ${visited.size}.`,
+    pseudoCodeLine: 1,
   })
 
   return steps
@@ -127,6 +139,7 @@ export function dfsSteps(adjacency: GraphAdjList, start: number): Step[] {
     action: 'insert',
     indices: [start],
     description: `Initialize DFS stack with start node ${start}.`,
+    pseudoCodeLine: 0,
   })
 
   while (stack.length > 0) {
@@ -141,6 +154,7 @@ export function dfsSteps(adjacency: GraphAdjList, start: number): Step[] {
       action: 'traverse',
       indices: [current],
       description: `Pop node ${current} and visit it.`,
+      pseudoCodeLine: 2,
     })
 
     const neighbors = [...(adjacency[current] ?? [])].sort((a, b) => b - a)
@@ -149,6 +163,8 @@ export function dfsSteps(adjacency: GraphAdjList, start: number): Step[] {
         action: 'compare',
         indices: [current, neighbor],
         description: `Inspect edge ${current} -> ${neighbor}.`,
+        pseudoCodeLine: 3,
+        edge: [current, neighbor],
       })
 
       if (!visited.has(neighbor)) {
@@ -157,6 +173,8 @@ export function dfsSteps(adjacency: GraphAdjList, start: number): Step[] {
           action: 'insert',
           indices: [neighbor],
           description: `Push unvisited node ${neighbor} to DFS stack.`,
+          pseudoCodeLine: 3,
+          edge: [current, neighbor],
         })
       }
     }
@@ -166,6 +184,7 @@ export function dfsSteps(adjacency: GraphAdjList, start: number): Step[] {
     action: 'info',
     indices: Array.from(visited),
     description: `DFS complete. Visited order size: ${visited.size}.`,
+    pseudoCodeLine: 1,
   })
 
   return steps

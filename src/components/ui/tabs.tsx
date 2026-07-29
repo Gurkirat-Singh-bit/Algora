@@ -34,7 +34,7 @@ function TabsTrigger({
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "relative inline-flex h-9 items-center justify-center whitespace-nowrap px-3 text-[13px] font-medium tracking-tight transition-colors",
+        "relative inline-flex h-11 items-center justify-center whitespace-nowrap px-3 text-[13px] font-medium tracking-tight transition-colors md:h-9",
         "text-dsa-muted hover:text-dsa-text",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dsa-primary-container/40",
         "data-[state=active]:text-dsa-text-strong",

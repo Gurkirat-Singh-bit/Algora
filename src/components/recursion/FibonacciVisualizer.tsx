@@ -113,8 +113,10 @@ export function FibonacciVisualizer() {
     setSpeed: runner.setSpeed,
   })
 
-  const currentStepIndices = runner.currentStepData?.indices ?? []
-  const flow = useMemo(() => toFlow(run, currentStepIndices), [run, currentStepIndices])
+  const flow = useMemo(
+    () => toFlow(run, runner.currentStepData?.indices ?? []),
+    [run, runner.currentStepData]
+  )
 
   const handleRun = (values: Record<string, string>) => {
     const parsed = Number(values.n)

@@ -7,6 +7,9 @@
     "dev": "next dev",
     "start": "next start",
     "lint": "eslint",
+    "test": "bun test tests",
+    "test:e2e": "playwright test",
+    "check": "bunx tsc --noEmit && bun run lint && bun test tests",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
@@ -37,7 +40,9 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.0",
     "@tailwindcss/postcss": "^4",
+    "@types/bun": "^1.3.14",
     "@types/dagre": "^0.7.54",
     "@types/node": "^20",
     "@types/react": "^19",
